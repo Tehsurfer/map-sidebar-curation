@@ -215,7 +215,6 @@ export default {
     },
     createScaffoldItems: function () {
       if (this.entry.scaffolds) {
-        window.entry = this.entry
         let index = 0;
         this.entry.scaffolds.forEach((scaffold, i) => {
           const filePath = scaffold.dataset.path;
