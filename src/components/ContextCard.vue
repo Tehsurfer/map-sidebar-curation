@@ -140,6 +140,9 @@ export default {
   computed: {
     samplesUnderViews: function(){
       if (this.contextData){
+        if (!this.contextData.views || !this.contextData.samples){
+          return false
+        }
         if (this.contextData.samplesUnderViews){
           return true
         } else {
