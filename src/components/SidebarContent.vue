@@ -311,9 +311,12 @@ export default {
       }
       data.results.forEach(element => {
         // match the scicrunch result with algolia result
-        let i = this.results.findIndex(res=> res.name === element.name)
+        let i = this.results.findIndex(res=> (res.datasetId === element.dataset_identifier) || (res.identifier === element.dataset_identifier))
+        console.log('i: ', i)
+        let name = this.results[i].name
         // Assign scicrunch results to the object
         Object.assign(this.results[i], element)
+        this.results[i].name = name
         // Assign the attributes that need some processing
         Object.assign(this.results[i],{
           numberSamples: element.sampleSize
@@ -322,8 +325,8 @@ export default {
           numberSubjects: element.subjectSize
             ? parseInt(element.subjectSize)
             : 0,
-          updated: element.updated[0].timestamp.split("T")[0],
-          url: element.uri[0],
+          updated: element.updated ? element.updated[0].timestamp.split("T")[0] : undefined,
+          url: element.uri? element.uri[0] : undefined,
           datasetId: element.dataset_identifier,
           datasetRevision: element.dataset_revision,
           datasetVersion: element.dataset_version,

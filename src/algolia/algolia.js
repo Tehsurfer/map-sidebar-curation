@@ -79,10 +79,10 @@ export class AlgoliaClient {
       newResult = { ...res }
       newResult = {
         doi: res.item.curie.split(':')[1],
-        name: res.item.name,
-        description: res.item.description,
-        updated: res.pennsieve.updatedAt,
-        publishDate: res.pennsieve.publishDate,
+        name: res.item.dataset.name,
+        description: res.item.dataset.description,
+        updated: res.pennsieve ? res.pennsieve.updatedAt : 'Unkown',
+        publishDate: res.pennsieve? res.pennsieve.publishDate : 'Uknown',
         datasetId: res.objectID,
         detailsReady: false
       }
@@ -133,20 +133,20 @@ export class AlgoliaClient {
           page: page - 1,
           filters: filter,
           attributesToHighlight: [],
-          attributesToRetrieve: [
-            'pennsieve.publishDate',
-            'pennsieve.updatedAt',
-            'item.curie',
-            'item.name',
-            'item.description',
-            'objectID',
-          ],
+          // attributesToRetrieve: [
+          //   'pennsieve.publishDate',
+          //   'pennsieve.updatedAt',
+          //   'item.curie',
+          //   'item.name',
+          //   'item.description',
+          //   'objectID',
+          // ],
         })
         .then(response => {
           let searchData = {
             items: this._processResultsForCards(response.hits),
             total: response.nbHits,
-            discoverIds: response.hits.map(r => r.pennsieve.identifier),
+            discoverIds: response.hits.map(r => r.pennsieve ? r.pennsieve.identifier : undefined),
             dois: response.hits.map(r => r.item.curie.split(':')[1])
           }
           resolve(searchData)

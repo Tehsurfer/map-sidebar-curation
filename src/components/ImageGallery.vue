@@ -28,7 +28,7 @@ const capitalise = function (string) {
   return string.replace(/\b\w/g, (v) => v.toUpperCase());
 };
 
-import GalleryHelper from "@abi-software/gallery/src/mixins/GalleryHelpers";
+import GalleryHelper from "../mixins/GalleryHelpers";
 import Gallery from "@abi-software/gallery";
 import "@abi-software/gallery/dist/gallery.css";
 
@@ -58,8 +58,8 @@ export default {
       },
     },
     datasetId: {
-      type: Number,
-      default: -1,
+      type: String,
+      default: "",
     },
     datasetVersion: {
       type: Number,
@@ -228,12 +228,7 @@ export default {
           let mimetype = '';
           let thumbnailURL = undefined;
           if (thumbnail) {
-            thumbnailURL = this.getImageURLFromS3(this.envVars.API_LOCATION, {
-              id,
-              datasetId: this.datasetId,
-              datasetVersion: this.datasetVersion,
-              file_path: thumbnail.dataset.path,
-            });
+            thumbnailURL = `${this.envVars.API_LOCATION}s3-resource/${this.datasetId}/${this.datasetVersion}/files/${filePath}`
             mimetype = thumbnail.mimetype.name;
           }
           let action = {
@@ -349,7 +344,7 @@ export default {
         return undefined
       } else {
         // The line below checks if there is a context file for each scaffold. If there is not, we use the first context card for each scaffold.
-        let contextIndex = this.entry['abi-contextual-information'].length == this.entry.scaffolds.length ? scaffoldIndex : 0
+        let contextIndex = this.entry.contextualInformation.length == this.entry.scaffolds.length ? scaffoldIndex : 0
         return `${this.envVars.API_LOCATION}s3-resource/${this.datasetId}/${this.datasetVersion}/files/${this.entry.contextualInformation[contextIndex]}`
       }
     }

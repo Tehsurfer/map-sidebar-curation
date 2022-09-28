@@ -144,7 +144,7 @@ export default {
           return false
         }
         if (this.contextData.samplesUnderViews){
-          return true
+          return this.contextData.samplesUnderViews
         } else {
           let viewId = this.contextData.views.map(v=>v.id)
           let samplesView = this.contextData.samples.map(s=>s.view)

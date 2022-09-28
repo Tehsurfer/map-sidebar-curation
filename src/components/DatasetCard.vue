@@ -4,8 +4,8 @@
       <div class="seperator-path"></div>
       <div v-loading="loading" class="card" >
         <span class="card-left">
-          <image-gallery v-if="!loading && discoverId" 
-            :datasetId="discoverId"
+          <image-gallery v-if="!loading" 
+            :datasetId="String(discoverId)"
             :datasetVersion="version"
             :entry="entry"
             :envVars="envVars"
@@ -172,9 +172,11 @@ export default {
     splitDOI: function(doi){
       return [doi.split('/')[doi.split('/').length-2], doi.split('/')[doi.split('/').length-1]]
     },
-    getBanner: function () {
-      // Only load banner if card has changed
-      if (this.lastDoi !== this.entry.doi) {
+    getBanner: function () { // NOTE! This getBanner uses the pennsieve api to retrive the banner. Only use for curation!
+      if (this.entry.datasetId.length > 4){
+        this.loading = true
+        this.getPennsieveBanner()
+      } else if (this.lastDoi !== this.entry.doi) {
         this.lastDoi = this.entry.doi
         this.loading = true
         let doi = this.splitDOI(this.entry.doi)
@@ -191,7 +193,7 @@ export default {
             this.discoverId = data.id
             this.version = data.version
             this.dataLocation = `https://sparc.science/datasets/${data.id}?type=dataset`
-            this.getBiolucidaInfo(this.discoverId)
+            if (this.discoverId.length < 5) this.getBiolucidaInfo(this.discoverId)
             this.loading = false
           })
           .catch(() => {
@@ -200,9 +202,67 @@ export default {
             this.discoverId = Number(this.entry.datasetId)
             this.loading = false
           });
-      }
+      } 
+    },
+    getPennsieveBanner: function(){
+      // authenticate with pennsieve
+      fetch('https://cognito-idp.us-east-1.amazonaws.com/', {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json, text/plain, */*',
+          'Content-Type': 'application/x-amz-json-1.1',
+          'X-Amz-Target': 'AWSCognitoIdentityProviderService.InitiateAuth',
+          'X-Amz-User-Agent': 'aws-amplify/0.1.x js',
+        },
+        body: JSON.stringify({"AuthFlow":"USER_PASSWORD_AUTH","ClientId":"670mo7si81pcc3sfub7o1914d8","AuthParameters":{"USERNAME":"jessekhorasanee@gmail.com","PASSWORD":"xxxxxxxxxxxxxxxxxx","DEVICE_KEY":"us-east-1_0d4e8de7-6079-470d-bedd-62043ba70f7e"},"ClientMetadata":{}})
+      }).then(res => res.json())
+        .then(res => {
+            console.log(res)
+            let token = res.AuthenticationResult.AccessToken
+            let proxy = `${this.envVars.API_LOCATION}proxy/?url=` // set up proxy 
+
+            // call pennsieve api via proxy
+            fetch(`${proxy}https://api.pennsieve.io/datasets/N%3Adataset%3A${this.entry.datasetId}/banner?api_key=${token}`
+            ).then(res=>res.json()).then(res=>{
+              console.log('success!')
+              this.thumbnail = res.banner
+              this.discoverId = this.entry.datasetId
+              this.loading = false
+            })
+        })
 
     },
+    // getBanner: function () {
+    //   // Only load banner if card has changed
+    //   if (this.lastDoi !== this.entry.doi) {
+    //     this.lastDoi = this.entry.doi
+    //     this.loading = true
+    //     let doi = this.splitDOI(this.entry.doi)
+    //     fetch(`${this.envVars.PENNSIEVE_API_LOCATION}/discover/datasets/doi/${doi[0]}/${doi[1]}`)
+    //       .then((response) =>{
+    //         if (!response.ok){
+    //           throw Error(response.statusText)
+    //         } else {
+    //           return response.json()
+    //         }
+    //       })
+    //       .then((data) => {
+    //         this.thumbnail = data.banner
+    //         this.discoverId = data.id
+    //         this.version = data.version
+    //         this.dataLocation = `https://sparc.science/datasets/${data.id}?type=dataset`
+    //         this.getBiolucidaInfo(this.discoverId)
+    //         this.loading = false
+    //       })
+    //       .catch(() => {
+    //         //set defaults if we hit an error
+    //         this.thumbnail = require('@/../assets/missing-image.svg')
+    //         this.discoverId = Number(this.entry.datasetId)
+    //         this.loading = false
+    //       });
+    //   }
+
+    // },
     lastName: function(fullName){
       return fullName.split(',')[0]
     },
