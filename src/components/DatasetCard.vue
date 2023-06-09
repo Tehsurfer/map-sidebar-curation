@@ -72,7 +72,7 @@ export default {
   },
   data: function () {
     return {
-      thumbnail: require('@/../assets/missing-image.svg'),
+      thumbnail: require('../../assets/missing-image.svg'),
       dataLocation: this.entry.doi,
       discoverId: undefined,
       loading: true,
@@ -198,7 +198,7 @@ export default {
           })
           .catch(() => {
             //set defaults if we hit an error
-            this.thumbnail = require('@/../assets/missing-image.svg')
+            this.thumbnail = require('../../assets/missing-image.svg')
             this.discoverId = Number(this.entry.datasetId)
             this.loading = false
           });
@@ -206,31 +206,11 @@ export default {
     },
     getPennsieveBanner: function(){
       // authenticate with pennsieve
-      fetch('https://cognito-idp.us-east-1.amazonaws.com/', {
-        method: 'POST',
-        headers: {
-          'Accept': 'application/json, text/plain, */*',
-          'Content-Type': 'application/x-amz-json-1.1',
-          'X-Amz-Target': 'AWSCognitoIdentityProviderService.InitiateAuth',
-          'X-Amz-User-Agent': 'aws-amplify/0.1.x js',
-        },
-        body: JSON.stringify({"AuthFlow":"USER_PASSWORD_AUTH","ClientId":"670mo7si81pcc3sfub7o1914d8","AuthParameters":{"USERNAME":"jessekhorasanee@gmail.com","PASSWORD":"xxxxxxxxxxxxxxxxxx","DEVICE_KEY":"us-east-1_0d4e8de7-6079-470d-bedd-62043ba70f7e"},"ClientMetadata":{}})
-      }).then(res => res.json())
-        .then(res => {
-            console.log(res)
-            let token = res.AuthenticationResult.AccessToken
-            let proxy = `${this.envVars.API_LOCATION}proxy/?url=` // set up proxy 
-
-            // call pennsieve api via proxy
-            fetch(`${proxy}https://api.pennsieve.io/datasets/N%3Adataset%3A${this.entry.datasetId}/banner?api_key=${token}`
-            ).then(res=>res.json()).then(res=>{
-              console.log('success!')
-              this.thumbnail = res.banner
-              this.discoverId = this.entry.datasetId
-              this.loading = false
-            })
-        })
-
+      fetch(`${this.envVars.API_LOCATION}get_banner/${this.entry.datasetId}`).then(res=>res.json()).then(res=>{
+        this.thumbnail = res.banner
+        this.discoverId = this.entry.datasetId
+        this.loading = false
+      })
     },
     // getBanner: function () {
     //   // Only load banner if card has changed

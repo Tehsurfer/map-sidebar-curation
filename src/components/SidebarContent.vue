@@ -100,6 +100,8 @@ var initial_state = {
   numberPerPage: 10,
   page: 1,
   pageModel: 1,
+  "_dois": [],
+  discoverIds: [],
   start: 0,
   hasSearched: false,
   contextCardEntry: undefined,
@@ -267,13 +269,13 @@ export default {
       //between unfinished search and new search
       const maxDownloads = 10;
       if (maxDownloads > data.count) {
-        const doi = this._dois.shift();
-        if (doi) {
+        const id = this.discoverIds.shift();
+        if (id) {
           data.count++;
-          this.callSciCrunch(this.envVars.API_LOCATION, {'dois': [doi]}, signal)
+          this.callSciCrunch(this.envVars.API_LOCATION, {'ids': id}, signal)
             .then(result => {
               if (result.numberOfHits === 0)
-                this.handleMissingData(doi);
+                this.handleMissingData(id);
               else
                 this.resultsProcessing(result);
               this.$refs.content.style["overflow-y"] = "scroll";
@@ -283,7 +285,7 @@ export default {
             })
             .catch(result => {
               if (result.name !== 'AbortError') {
-                this.handleMissingData(doi);
+                this.handleMissingData(id);
                 data.count--;
                 //Async::Download not aborted, get the next one
                 this.perItemSearch(signal, data);
@@ -387,7 +389,7 @@ export default {
   },
   created: function() {
     //Create non-reactive local variables
-    this.searchEndpoint = "dataset_info/using_multiple_dois/";
+    this.searchEndpoint = "dataset_info/using_pennsieveId/";
   }
 };
 </script>
